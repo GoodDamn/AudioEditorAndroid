@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity() {
         rootLayout.addView(textViewInfo)
         rootLayout.addView(btnSaveFile)
         rootLayout.addView(sampleView, -1,
-            (metrics.heightPixels * 0.55f).toInt())
+            (metrics.heightPixels * 0.45f).toInt())
 
         setContentView(rootLayout)
     }

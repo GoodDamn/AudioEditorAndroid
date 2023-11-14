@@ -158,8 +158,8 @@ class AudioFactory {
             val maxAmp = 2.0.pow(audioWav.bitDepth - 1) - 1
 
             // ONLY FOR 16-bits !!!!
-            for (sample in audioWav.fromCrop until audioWav.toCrop) {
-                val digitalSample = (sample * maxAmp * audioWav.volume).toInt().toShort()
+            for (i in audioWav.fromCrop until audioWav.toCrop) {
+                val digitalSample = (audioWav.samples!![i] * maxAmp * audioWav.volume).toInt().toShort()
                 outStream.write(ByteUtilsLE.Short(digitalSample))
             }
 

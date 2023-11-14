@@ -67,7 +67,7 @@ class SamplesView(context: Context)
         super.onLayout(changed, left, top, right, bottom)
 
         mRectCrop.left = 0
-        mRectCrop.right = (width * 0.25f).toInt()
+        mRectCrop.right = (width * 0.35f).toInt()
         mRectCrop.top = 0
         mRectCrop.bottom = height
 
@@ -133,8 +133,8 @@ class SamplesView(context: Context)
                 }
 
                 // Scale mode and volume mode
-                mSamples = mTempSamplesScale - (motion.rawX - mDownX).toInt()
-                mAmplitude = mTempAmplitudeScale - (motion.rawY - mDownY) / mHalfMidY
+                mSamples = mTempSamplesScale + ((motion.rawX - mDownX) * 0.1f).toInt()
+                mAmplitude = mTempAmplitudeScale + (motion.rawY - mDownY) / mHalfMidY * 0.1f
 
                 return true
             }
