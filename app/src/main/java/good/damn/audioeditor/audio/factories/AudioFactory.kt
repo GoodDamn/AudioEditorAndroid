@@ -89,6 +89,9 @@ class AudioFactory {
 
             audioWav.samples = FloatArray(audioWav.dataSize / sampleSize)
 
+            audioWav.fromCrop = 0
+            audioWav.toCrop = audioWav.samples!!.size - 1
+
             for (i in 0 until audioWav.samples!!.size) {
                 inputStream.read(buffer2,0,sampleSize)
                 audioWav.samples!![i] = when(sampleSize) {
@@ -107,6 +110,8 @@ class AudioFactory {
                 Log.d(TAG, "saveWav: FILE ${outFile.name} IS CREATED")
             }
 
+            val dataSize = audioWav.toCrop - audioWav.fromCrop
+
             val outStream = FileOutputStream(outFile)
 
             val charset = Charset.forName("US-ASCII")
@@ -114,7 +119,7 @@ class AudioFactory {
             outStream.write("RIFF".toByteArray(charset))
 
             outStream.write(ByteUtilsLE
-                .integer(audioWav.fileSize))
+                .integer(dataSize + audioWav.chunksSize))
 
             outStream.write("WAVE".toByteArray(charset))
             outStream.write("fmt ".toByteArray(charset))
@@ -142,7 +147,7 @@ class AudioFactory {
 
             outStream.write("data".toByteArray(charset))
             outStream.write(ByteUtilsLE
-                .integer(audioWav.dataSize))
+                .integer(dataSize))
 
             if (audioWav.samples == null) {
                 return;
@@ -153,7 +158,7 @@ class AudioFactory {
             val maxAmp = 2.0.pow(audioWav.bitDepth - 1) - 1
 
             // ONLY FOR 16-bits !!!!
-            for (sample in audioWav.samples!!) {
+            for (sample in audioWav.fromCrop until audioWav.toCrop) {
                 val digitalSample = (sample * maxAmp * audioWav.volume).toInt().toShort()
                 outStream.write(ByteUtilsLE.Short(digitalSample))
             }

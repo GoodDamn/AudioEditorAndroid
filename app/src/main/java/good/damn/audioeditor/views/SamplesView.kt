@@ -147,4 +147,11 @@ class SamplesView(context: Context)
         return false
     }
 
+    fun getCropLeftFraction(): Float {
+        return mRectCrop.left.toFloat() / width
+    }
+
+    fun getCropRightFraction(): Float {
+        return mRectCrop.right.toFloat() / width
+    }
 }

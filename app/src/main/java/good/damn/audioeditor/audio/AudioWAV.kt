@@ -1,6 +1,8 @@
 package good.damn.audioeditor.audio
 
 class AudioWAV {
+    var fromCrop: Int = 0
+    var toCrop: Int = 1
     var chunksSize: Int = 20
     var volume: Float = 1.0f
     var samples: FloatArray? = null

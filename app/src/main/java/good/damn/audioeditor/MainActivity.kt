@@ -69,6 +69,14 @@ class MainActivity : AppCompatActivity() {
 
             mAudioWav!!.volume = sampleView.mAmplitude
 
+            val samples = mAudioWav!!.samples!!
+
+            mAudioWav!!.fromCrop = (sampleView.getCropLeftFraction()
+                    * samples.size).toInt()
+
+            mAudioWav!!.toCrop = (sampleView.getCropRightFraction()
+                * samples.size).toInt()
+
             val dir = Environment.getExternalStoragePublicDirectory(Environment
                 .DIRECTORY_DOCUMENTS)
             val outFile = File(dir, "fromAE.wav")
