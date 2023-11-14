@@ -23,6 +23,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val metrics = resources.displayMetrics
+
         val rootLayout = LinearLayout(this)
         rootLayout.orientation = LinearLayout.VERTICAL
 
@@ -38,10 +40,6 @@ class MainActivity : AppCompatActivity() {
 
         val sampleView = SamplesView(this)
         sampleView.mSamples = 5
-
-        val seekBarVolume = SeekBar(this)
-        seekBarVolume.max = 125
-        seekBarVolume.progress = 125
 
         val fileBrowser = registerForActivityResult(ActivityResultContracts
             .GetContent()) { uri: Uri? ->
@@ -84,19 +82,11 @@ class MainActivity : AppCompatActivity() {
             fileBrowser.launch("audio/*")
         }
 
-        seekBarVolume.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(p0: SeekBar?, progress: Int, p2: Boolean) {
-                sampleView.mAmplitude = progress.toFloat() / (seekBarVolume.max/2)
-            }
-            override fun onStartTrackingTouch(p0: SeekBar?) {}
-            override fun onStopTrackingTouch(p0: SeekBar?) {}
-        })
-
-        rootLayout.addView(textViewInfo)
         rootLayout.addView(btnSelectFile)
-        rootLayout.addView(sampleView, -1, 550)
-        rootLayout.addView(seekBarVolume,-1,125)
+        rootLayout.addView(textViewInfo)
         rootLayout.addView(btnSaveFile)
+        rootLayout.addView(sampleView, -1,
+            (metrics.heightPixels * 0.55f).toInt())
 
         setContentView(rootLayout)
     }

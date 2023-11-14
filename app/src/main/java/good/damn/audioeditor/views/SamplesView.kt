@@ -17,13 +17,17 @@ class SamplesView(context: Context)
 
     private var mIsCropMode = false
 
+    private var mHalfMidY = 5
+
     private var mDownX = 0f
     private var mDownY = 0f
 
-    private var mSavedSamplesScale = 0
     private var mIntervalSample:Int = 0
     private var mPaintSamples = Paint()
     private var mPaintCrop = Paint()
+
+    private var mTempSamplesScale = 5
+    private var mTempAmplitudeScale = 1.0f
 
     var mAmplitude: Float = 1.0f
         set(value) {
@@ -66,6 +70,8 @@ class SamplesView(context: Context)
         mRectCrop.right = (width * 0.25f).toInt()
         mRectCrop.top = 0
         mRectCrop.bottom = height
+
+        mHalfMidY = (height * 0.25f).toInt()
     }
 
     override fun onDraw(canvas: Canvas?) {
@@ -111,7 +117,9 @@ class SamplesView(context: Context)
                     return true
                 }
 
-                mSavedSamplesScale = mSamples
+                mTempSamplesScale = mSamples
+                mTempAmplitudeScale = mAmplitude
+
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
@@ -124,8 +132,10 @@ class SamplesView(context: Context)
                     return true
                 }
 
-                // Scale mode
-                mSamples = (motion.rawY - mDownY).toInt()
+                // Scale mode and volume mode
+                mSamples = mTempSamplesScale - (motion.rawX - mDownX).toInt()
+                mAmplitude = mTempAmplitudeScale - (motion.rawY - mDownY) / mHalfMidY
+
                 return true
             }
 
