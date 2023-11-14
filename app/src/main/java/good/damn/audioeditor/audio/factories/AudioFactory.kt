@@ -1,13 +1,12 @@
 package good.damn.audioeditor.audio.factories
 
-import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import good.damn.audioeditor.audio.AudioWAV
-import good.damn.audioeditor.utils.ByteUtils
+import good.damn.audioeditor.utils.ByteUtilsLE
 import java.io.File
-import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.io.InputStream
 import java.nio.charset.Charset
 import kotlin.math.pow
@@ -48,57 +47,118 @@ class AudioFactory {
             audioWav.wavType = String(buffer4, Charset.forName("US-ASCII"))
 
             inputStream.read(buffer4)
-            audioWav.fileSize = ByteUtils.integer(buffer4)
+            audioWav.fileSize = ByteUtilsLE.integer(buffer4)
 
             inputStream.read(buffer4) // WAVE
             inputStream.read(buffer4) // "fmt " format chunk
 
             inputStream.read(buffer4) // format chunk size
-            audioWav.formatChunkSize = ByteUtils.integer(buffer4)
+            audioWav.formatChunkSize = ByteUtilsLE.integer(buffer4)
 
             inputStream.read(buffer2)
-            audioWav.compressionCode = ByteUtils.Short(buffer2,0)
+            audioWav.compressionCode = ByteUtilsLE.Short(buffer2,0)
 
             inputStream.read(buffer2)
-            audioWav.numberOfChannels = ByteUtils.Short(buffer2,0)
+            audioWav.numberOfChannels = ByteUtilsLE.Short(buffer2,0)
 
             inputStream.read(buffer4)
-            audioWav.sampleRate = ByteUtils.integer(buffer4)
+            audioWav.sampleRate = ByteUtilsLE.integer(buffer4)
 
             inputStream.read(buffer4)
-            audioWav.bitRate = ByteUtils.integer(buffer4)
+            audioWav.bitRate = ByteUtilsLE.integer(buffer4)
 
             inputStream.read(buffer2)
-            audioWav.blockAlign = ByteUtils.Short(buffer2,0)
+            audioWav.blockAlign = ByteUtilsLE.Short(buffer2,0)
 
             inputStream.read(buffer2)
-            audioWav.bitDepth = ByteUtils.Short(buffer2, 0)
+            audioWav.bitDepth = ByteUtilsLE.Short(buffer2, 0)
 
             inputStream.read(buffer4) // "data" tag
             inputStream.read(buffer4)
-            audioWav.dataSize = ByteUtils.integer(buffer4,0)
+            audioWav.dataSize = ByteUtilsLE.integer(buffer4,0)
+
+            audioWav.chunksSize = audioWav.fileSize - audioWav.dataSize
 
             // Read samples
 
-            val sampleSize = audioWav.bitDepth / 8
+            Log.d(TAG, "createWav: INFO: $audioWav")
 
-            val bufferSample = ByteArray(sampleSize)
+            val sampleSize = audioWav.bitDepth / 8
 
             val maxAmplitude = 2.0.pow((audioWav.bitDepth - 1).toDouble()) - 1
 
             audioWav.samples = FloatArray(audioWav.dataSize / sampleSize)
 
             for (i in 0 until audioWav.samples!!.size) {
-                inputStream.read(bufferSample)
+                inputStream.read(buffer2,0,sampleSize)
                 audioWav.samples!![i] = when(sampleSize) {
-                    4 -> (ByteUtils.integer(bufferSample) / maxAmplitude).toFloat()
-                    else -> (ByteUtils.Short(bufferSample,0) / maxAmplitude).toFloat()
+                    2 -> (ByteUtilsLE.Short(buffer2,0) / maxAmplitude).toFloat()
+                    else -> (ByteUtilsLE.integer(buffer4) / maxAmplitude).toFloat()
                 }
             }
 
             inputStream.close()
 
             return audioWav
+        }
+
+        fun saveWav(outFile: File, audioWav: AudioWAV) {
+            if (!outFile.exists() && outFile.createNewFile()) {
+                Log.d(TAG, "saveWav: FILE ${outFile.name} IS CREATED")
+            }
+
+            val outStream = FileOutputStream(outFile)
+
+            val charset = Charset.forName("US-ASCII")
+
+            outStream.write("RIFF".toByteArray(charset))
+
+            outStream.write(ByteUtilsLE
+                .integer(audioWav.fileSize))
+
+            outStream.write("WAVE".toByteArray(charset))
+            outStream.write("fmt ".toByteArray(charset))
+
+            outStream.write(ByteUtilsLE
+                .integer(audioWav.formatChunkSize))
+
+            outStream.write(ByteUtilsLE
+                .Short(audioWav.compressionCode),0,2)
+
+            outStream.write(ByteUtilsLE
+                .Short(audioWav.numberOfChannels),0,2)
+
+            outStream.write(ByteUtilsLE
+                .integer(audioWav.sampleRate))
+
+            outStream.write(ByteUtilsLE
+                .integer(audioWav.bitRate))
+
+            outStream.write(ByteUtilsLE
+                .Short(audioWav.blockAlign),0,2)
+
+            outStream.write(ByteUtilsLE
+                .Short(audioWav.bitDepth),0,2)
+
+            outStream.write("data".toByteArray(charset))
+            outStream.write(ByteUtilsLE
+                .integer(audioWav.dataSize))
+
+            if (audioWav.samples == null) {
+                return;
+            }
+
+            val sampleSize = audioWav.bitDepth / 8
+
+            val maxAmp = 2.0.pow(audioWav.bitDepth - 1) - 1
+
+            // ONLY FOR 16-bits !!!!
+            for (sample in audioWav.samples!!) {
+                val digitalSample = (sample * maxAmp * audioWav.volume).toInt().toShort()
+                outStream.write(ByteUtilsLE.Short(digitalSample))
+            }
+
+            outStream.close()
         }
     }
 
